@@ -7,7 +7,9 @@ Um site **separado** do projeto Meus Sonhos & Metas, feito para GitHub Pages e c
 - Criar, renomear e excluir **pastas** (Português, Pedagogia, Minha rotina etc.) sem perder os textos ao excluir a pasta.
 - Criar quantos **tópicos/documentos** quiser dentro de cada pasta.
 - Editar texto com formatação inspirada no **Word**: títulos, negrito, itálico, sublinhado, listas, alinhamento, tabelas e links.
-- Adicionar **fotos e vídeos** no meio do documento; vídeos do YouTube e arquivos de vídeo até 25 MB; reorganizar mídia para cima/baixo, alinhar à esquerda/centro/direita e ajustar largura.
+- Adicionar **fotos e vídeos diretamente dos seus arquivos**: clique em **📷 Foto do computador** ou **🎬 Vídeo do computador**. A opção **Vídeo por link** continua disponível, mas não é obrigatória. O modo local aceita arquivos até **100 MB**, sujeito à capacidade de armazenamento do navegador; o modo nuvem, até **25 MB**. Você pode reorganizar, alinhar e redimensionar as mídias.
+- **Baixar este texto + arquivos** cria um **ZIP com um HTML legível e as fotos/vídeos originais incluídos na pasta `midias/`**. Extraia todos os arquivos e abra `abrir-meu-texto.html` no computador. Vídeos incorporados do YouTube continuam exigindo internet e não são baixados.
+- Selecione uma foto ou vídeo que você enviou e clique em **Baixar foto/vídeo** para baixar só aquele arquivo.
 - **Pesquisa geral** por título, palavras no conteúdo ou ambos, sem precisar abrir as pastas.
 - **Salvar automaticamente**, modo apresentação com visual de leitura, layout responsivo.
 - Fazer cópia de segurança e importar (no modo local, inclui mídias; na nuvem, exportação JSON inclui os textos e as referências aos arquivos privados, mas não os arquivos em si).
@@ -43,6 +45,7 @@ Um site **separado** do projeto Meus Sonhos & Metas, feito para GitHub Pages e c
 ### Observações importantes
 
 - O projeto **Meus Sonhos & Metas** não é modificado.
+- As fotos e os vídeos no modo local são preservados no **IndexedDB do navegador**, não dentro do repositório público do GitHub. Se limpar os dados do navegador, usar outro aparelho ou outro domínio, poderá perder o acesso, então exporte cópias com frequência. Para vídeos grandes, prefira exportar cada texto com suas mídias em ZIP; o backup geral em JSON pode ficar muito pesado.
 - O modo local e o modo de nuvem são **separados**: para migrar os textos, exporte/importa a cópia. Uma cópia local com fotos não faz automaticamente upload das fotos na nuvem; nesse caso, reinsira as imagens nos textos já importados. Faça uma cópia antes de migrar.
 - O modo nuvem requer conexão com internet; a autenticação depende do CDN público do Supabase.
 - Arquivos enviados à nuvem ficam em um bucket privado; o site cria links temporários durante a visualização. Um link de vídeo do YouTube continua seguindo as regras de privacidade do YouTube.
@@ -53,3 +56,7 @@ Um site **separado** do projeto Meus Sonhos & Metas, feito para GitHub Pages e c
 ## Arquivos
 
 `index.html` (páginas e editor), `styles.css` (visual), `app.js` (funcionalidades), `config.js` (conexão pública com Supabase), `supabase-setup.sql` (banco seguro), `README.md` (este guia).
+
+## Atualização de um site já publicado
+
+Se você já usa o Meu Espaço Pessoal no GitHub Pages, envie os **seis arquivos atualizados** para a raiz do **mesmo repositório** e confirme as alterações. Isso atualiza o site sem apagar as anotações locais previamente salvas nesse mesmo navegador e endereço. **Antes de atualizar, exporte uma cópia de segurança**. O modo local não sincroniza anotações entre aparelhos.

@@ -82,7 +82,7 @@
   function sanitize(html){const tpl=document.createElement('template');tpl.innerHTML=String(html||'');const allowed=new Set(['P','DIV','BR','STRONG','B','EM','I','U','S','STRIKE','H1','H2','H3','H4','UL','OL','LI','BLOCKQUOTE','A','TABLE','TBODY','THEAD','TR','TD','TH','FIGURE','IMG','VIDEO','SOURCE','IFRAME','SPAN','HR','FIGCAPTION','FONT']);
     const walk=node=>{for(const child of [...node.children]){if(!allowed.has(child.tagName)){const fragment=document.createDocumentFragment();while(child.firstChild)fragment.appendChild(child.firstChild);child.replaceWith(fragment);walk(node);continue}
       for(const attr of [...child.attributes]){const k=attr.name.toLowerCase(),v=attr.value;
-        const permitted=['data-media-id','data-media-path','data-align','alt','controls','loading','title','contenteditable','colspan','rowspan'].includes(k)||k==='style'||(k==='src'&&['IMG','VIDEO','SOURCE','IFRAME'].includes(child.tagName))||(k==='href'&&child.tagName==='A');
+        const permitted=['data-media-id','data-media-path','data-media-name','data-align','alt','controls','loading','title','contenteditable','colspan','rowspan'].includes(k)||k==='style'||(k==='src'&&['IMG','VIDEO','SOURCE','IFRAME'].includes(child.tagName))||(k==='href'&&child.tagName==='A');
         if(!permitted||k.startsWith('on')){child.removeAttribute(attr.name);continue}
         if(k==='style'){const kept=[];for(const rule of v.split(';')){const [key,value]=rule.split(':').map(s=>s?.trim());if(!key||!value)continue;if(key==='width'&&/^(100|[1-9]?\d)(\.\d+)?%$/.test(value))kept.push(`width:${value}`);if(key==='text-align'&&/^(left|right|center|justify)$/.test(value))kept.push(`text-align:${value}`);if(key==='float'&&/^(left|right|none)$/.test(value))kept.push(`float:${value}`);if(key==='margin'&&/^[\w\s.%\-]+$/.test(value))kept.push(`margin:${value}`);if((key==='color'||key==='background-color')&&/^(#[0-9a-f]{3,8}|rgb\([\d,\s.%]+\)|[a-z]+)$/i.test(value))kept.push(`${key}:${value}`)}child.setAttribute('style',kept.join(';'));continue}
         if(k==='src'){if(child.tagName==='IFRAME'&&!/^https:\/\/www\.youtube-nocookie\.com\/embed\/[a-zA-Z0-9_-]{11}$/.test(v)){child.removeAttribute('src')}else if(child.tagName!=='IFRAME'&&!/^(blob:|https:\/\/|data:image\/(png|jpeg|gif|webp);base64,)/i.test(v))child.removeAttribute('src')}
@@ -111,15 +111,46 @@
   $('insertLineBtn').onclick=()=>insertHTML('<hr><p><br></p>');
   $('insertTableBtn').onclick=()=>insertHTML('<table><tbody><tr><td>Escreva aqui</td><td>Escreva aqui</td></tr><tr><td>Escreva aqui</td><td>Escreva aqui</td></tr></tbody></table><p><br></p>');
   function videoEmbed(url){try{const u=new URL(url);let id='';if(['youtube.com','www.youtube.com','m.youtube.com'].includes(u.hostname)){id=u.searchParams.get('v')||u.pathname.match(/^\/(?:shorts|live|embed)\/([\w-]+)/)?.[1]||''}else if(u.hostname==='youtu.be'||u.hostname==='www.youtu.be')id=u.pathname.slice(1).split('/')[0];if(/^[\w-]{11}$/.test(id))return `<iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/${id}" title="Vídeo do YouTube" allowfullscreen></iframe>`;if(url.startsWith('https://')&&/\.(mp4|webm)(?:\?|$)/i.test(u.pathname))return `<video controls src="${esc(url)}"></video>`}catch{}return null}
-  $('insertVideoBtn').onclick=async()=>{const url=await askModal('Inserir vídeo ▶','Cole o link de um vídeo do YouTube ou um link HTTPS direto para MP4/WebM. Você também pode enviar um arquivo pelo botão “Foto” (aceita vídeo).','https://www.youtube.com/watch?v=...');if(!url)return;const embed=videoEmbed(url);if(!embed){notify('Link de vídeo não reconhecido. Experimente um link do YouTube.');return}insertHTML(`<figure contenteditable="false" data-align="center" style="width:80%;margin:22px auto">${embed}</figure><p><br></p>`)};
-  $('insertPhotoBtn').onclick=()=>{$('mediaFileInput').value='';$('mediaFileInput').click()};
+  // Fotos e vídeos do próprio aparelho: o botão de vídeo NÃO exige um link.
+  function chooseMedia(type){
+    const input=$('mediaFileInput');input.value='';
+    input.accept=type==='image'?'image/*': 'video/*,.mp4,.webm,.mov,.m4v';
+    input.dataset.kind=type;
+    rememberSelection();input.click();
+  }
+  $('insertPhotoBtn').onclick=()=>chooseMedia('image');
+  $('insertVideoBtn').onclick=()=>chooseMedia('video');
+  $('insertVideoLinkBtn').onclick=async()=>{const url=await askModal('Vídeo por link (opcional) ▶','Cole o endereço de um vídeo do YouTube. Para um vídeo salvo no computador, use “Vídeo do computador”.','https://www.youtube.com/watch?v=...');if(!url)return;const embed=videoEmbed(url);if(!embed){notify('Link de vídeo não reconhecido.');return}insertHTML(`<figure contenteditable="false" data-align="center" style="width:80%;margin:22px auto">${embed}</figure><p><br></p>`)};
+
   async function imageCompress(file){if(!file.type.startsWith('image/')||file.type==='image/gif'||file.type==='image/svg+xml')return file;try{const bitmap=await createImageBitmap(file);const scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));if(scale===1&&file.size<2_000_000)return file;const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();return await new Promise(resolve=>canvas.toBlob(b=>resolve(b||file),'image/jpeg',.83))}catch{return file}}
-  $('mediaFileInput').onchange=async e=>{let file=e.target.files?.[0];if(!file)return;const isImage=file.type.startsWith('image/'),isVideo=file.type.startsWith('video/');if(!isImage&&!isVideo){notify('Selecione uma foto ou um vídeo.');return}if(file.size>25*1024*1024){notify('O arquivo ultrapassa 25 MB. Para vídeos maiores, use um link do YouTube.');return}
-    notify('Preparando arquivo...');if(isImage)file=await imageCompress(file);
-    try{let dataAttr='',url='';if(state.mode==='local'){const id=uid();await idbPut(id,file);dataAttr=`data-media-id="${id}"`;url=URL.createObjectURL(file);state.blobUrls.push(url)}else{const path=`${state.user.id}/${uid()}.${isImage?'jpg':(file.type==='video/webm'?'webm':'mp4')}`;const {error}=await sb.storage.from('study-media').upload(path,file,{contentType:file.type,upsert:false});if(error)throw error;const signed=await sb.storage.from('study-media').createSignedUrl(path,3600);if(signed.error)throw signed.error;dataAttr=`data-media-path="${path}"`;url=signed.data.signedUrl}
-      const media=isImage?`<img ${dataAttr} alt="Imagem do estudo" src="${esc(url)}" />`:`<video ${dataAttr} controls src="${esc(url)}"></video>`;
-      insertHTML(`<figure contenteditable="false" data-align="center" style="width:80%;margin:22px auto">${media}<figcaption>Toque para ajustar tamanho e posição</figcaption></figure><p><br></p>`);notify('Arquivo inserido no texto!')
-    }catch(error){notify('Não foi possível inserir: '+error.message)}};
+  const extensionFor = mime => ({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/svg+xml':'svg','video/mp4':'mp4','video/webm':'webm','video/quicktime':'mov','video/x-m4v':'m4v','video/ogg':'ogv'})[mime] || '';
+  const safeName = name => String(name||'arquivo').replace(/[\\/:*?"<>|\x00-\x1f]/g,'-').replace(/^\.+/,'').slice(0,120)||'arquivo';
+  function nameForStoredFile(original,blob){const ext=extensionFor(blob.type);const base=safeName(original).replace(/\.[^.]+$/,'');return `${base||'arquivo'}.${ext||'bin'}`}
+  $('mediaFileInput').onchange=async e=>{
+    const chosen=e.target.files?.[0];if(!chosen)return;
+    const requested=e.target.dataset.kind;
+    const isImage=chosen.type.startsWith('image/'),isVideo=chosen.type.startsWith('video/');
+    if(!((requested==='image'&&isImage)||(requested==='video'&&isVideo))){notify(requested==='image'?'Escolha uma imagem.':'Escolha um arquivo de vídeo.');return}
+    const limit=state.mode==='local'?100*1024*1024:25*1024*1024;
+    if(chosen.size>limit){notify(`Arquivo grande demais. Limite neste modo: ${Math.round(limit/1024/1024)} MB.`);return}
+    notify('Guardando o arquivo no seu espaço...');
+    const file=isImage?await imageCompress(chosen):chosen;
+    const storedName=nameForStoredFile(chosen.name,file);
+    try{let dataAttr='',url='';
+      if(state.mode==='local'){
+        const id=uid();await idbPut(id,file);dataAttr=`data-media-id="${id}"`;url=URL.createObjectURL(file);state.blobUrls.push(url);
+      }else{
+        const path=`${state.user.id}/${uid()}.${extensionFor(file.type)||'bin'}`;
+        const {error}=await sb.storage.from('study-media').upload(path,file,{contentType:file.type,upsert:false});if(error)throw error;
+        const signed=await sb.storage.from('study-media').createSignedUrl(path,3600);if(signed.error)throw signed.error;
+        dataAttr=`data-media-path="${path}"`;url=signed.data.signedUrl;
+      }
+      const attrs=`${dataAttr} data-media-name="${esc(storedName)}"`;
+      const media=isImage?`<img ${attrs} alt="${esc(storedName)}" src="${esc(url)}" />`:`<video ${attrs} controls src="${esc(url)}"></video>`;
+      insertHTML(`<figure contenteditable="false" data-align="center" style="width:80%;margin:22px auto">${media}<figcaption>${esc(storedName)} · Clique para ajustar ou baixar</figcaption></figure><p><br></p>`);
+      await flushSave();notify('Arquivo adicionado e salvo neste espaço!');
+    }catch(error){notify('Não foi possível guardar o arquivo: '+(error?.name==='QuotaExceededError'?'armazenamento do navegador cheio. Faça uma cópia de segurança.':error.message))}
+  };
   $('editor').addEventListener('click',e=>{const fig=e.target.closest('figure');if(state.selectedMedia)state.selectedMedia.classList.remove('selected');state.selectedMedia=fig||null;$('mediaToolbar').classList.toggle('hidden',!fig);if(fig){fig.classList.add('selected');$('mediaWidth').value=parseFloat(fig.style.width)||80}});
   document.querySelectorAll('[data-align]').forEach(btn=>btn.onclick=()=>{const fig=state.selectedMedia;if(!fig)return;const a=btn.dataset.align;fig.dataset.align=a;fig.style.float=a==='center'?'none':a;fig.style.margin=a==='center'?'22px auto':a==='left'?'20px 25px 20px 0':'20px 0 20px 25px';queueSave()});
   $('mediaWidth').oninput=e=>{if(!state.selectedMedia)return;state.selectedMedia.style.width=e.target.value+'%';queueSave()};
@@ -127,6 +158,66 @@
   $('mediaDownBtn').onclick=()=>{const f=state.selectedMedia;if(f?.nextElementSibling){f.nextElementSibling.after(f);queueSave()}};
   $('mediaRemoveBtn').onclick=()=>{if(!state.selectedMedia)return;state.selectedMedia.remove();state.selectedMedia=null;$('mediaToolbar').classList.add('hidden');queueSave()};
   $('editor').addEventListener('paste',e=>{if(!e.clipboardData)return;e.preventDefault();const txt=e.clipboardData.getData('text/plain');document.execCommand('insertText',false,txt)});
+  async function mediaBlob(el){
+    if(el.dataset.mediaId && state.mode==='local'){
+      const b=await idbGet(el.dataset.mediaId);if(!b)throw Error('Arquivo não encontrado neste navegador.');return b;
+    }
+    if(el.dataset.mediaPath && state.mode==='cloud'){
+      const {data,error}=await sb.storage.from('study-media').download(el.dataset.mediaPath);if(error)throw error;return data;
+    }
+    throw Error('Esta mídia veio de um link externo, não dos seus arquivos.');
+  }
+  function downloadBlob(blob,name){
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=safeName(name);
+    document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);
+  }
+  $('mediaDownloadBtn').onclick=async()=>{
+    const el=state.selectedMedia?.querySelector('img[data-media-id],video[data-media-id],img[data-media-path],video[data-media-path]');
+    if(!el){notify('Clique primeiro em uma foto ou vídeo que você enviou.');return}
+    try{const blob=await mediaBlob(el);downloadBlob(blob,el.dataset.mediaName||`arquivo.${extensionFor(blob.type)||'bin'}`);notify('Arquivo enviado para Downloads.')}catch(e){notify('Não foi possível baixar: '+e.message)}
+  };
+  // Criador de ZIP sem depender de bibliotecas externas. O arquivo contém HTML e mídias reais.
+  const enc=new TextEncoder();
+  const crcTable=Array.from({length:256},(_,n)=>{let c=n;for(let i=0;i<8;i++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0});
+  function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0}
+  function zipFiles(items){
+    const chunks=[],central=[];let offset=0;
+    for(const item of items){
+      const name=enc.encode(item.name),bytes=item.bytes;const crc=crc32(bytes);
+      const h=new Uint8Array(30+name.length),d=new DataView(h.buffer);
+      d.setUint32(0,0x04034b50,true);d.setUint16(4,20,true);d.setUint16(6,0x800,true);
+      d.setUint32(14,crc,true);d.setUint32(18,bytes.length,true);d.setUint32(22,bytes.length,true);d.setUint16(26,name.length,true);h.set(name,30);
+      chunks.push(h,bytes);
+      const ch=new Uint8Array(46+name.length),cd=new DataView(ch.buffer);
+      cd.setUint32(0,0x02014b50,true);cd.setUint16(4,20,true);cd.setUint16(6,20,true);cd.setUint16(8,0x800,true);
+      cd.setUint32(16,crc,true);cd.setUint32(20,bytes.length,true);cd.setUint32(24,bytes.length,true);cd.setUint16(28,name.length,true);
+      cd.setUint32(42,offset,true);ch.set(name,46);central.push(ch);offset+=h.length+bytes.length;
+    }
+    const cdSize=central.reduce((s,b)=>s+b.length,0),end=new Uint8Array(22),ed=new DataView(end.buffer);
+    ed.setUint32(0,0x06054b50,true);ed.setUint16(8,items.length,true);ed.setUint16(10,items.length,true);
+    ed.setUint32(12,cdSize,true);ed.setUint32(16,offset,true);
+    return new Blob([...chunks,...central,end],{type:'application/zip'});
+  }
+  $('exportNoteBtn').onclick=async()=>{
+    const btn=$('exportNoteBtn');btn.disabled=true;const before=btn.textContent;btn.textContent='Preparando arquivos...';
+    try{
+      await flushSave();const note=state.notes.find(n=>n.id===state.activeId);if(!note)throw Error('Nenhuma anotação aberta.');
+      const doc=document.createElement('div');doc.innerHTML=sanitize(note.content);
+      const files=[];let index=0;
+      for(const el of doc.querySelectorAll('img[data-media-id],video[data-media-id],img[data-media-path],video[data-media-path]')){
+        const blob=await mediaBlob(el),name=safeName(el.dataset.mediaName||`arquivo.${extensionFor(blob.type)||'bin'}`);
+        const filename=`midias/${String(++index).padStart(2,'0')}-${name}`;
+        files.push({name:filename,bytes:new Uint8Array(await blob.arrayBuffer())});
+        el.setAttribute('src',filename);el.removeAttribute('data-media-id');el.removeAttribute('data-media-path');el.removeAttribute('data-media-name');
+      }
+      doc.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+      const title=esc(note.title||'Sem título');
+      const html=`<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>body{max-width:900px;margin:40px auto;padding:0 22px;font:17px/1.65 Georgia,serif;color:#303039}h1,h2,h3{font-family:Arial,sans-serif;line-height:1.3}h1{color:#884365}img,video,iframe{max-width:100%;height:auto}figure{max-width:100%;margin:18px auto}figcaption{font:12px Arial,sans-serif;color:#777}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:9px}blockquote{border-left:3px solid #c27b9e;padding-left:16px}a{color:#9b4972}</style></head><body><h1>${title}</h1><main>${doc.innerHTML}</main></body></html>`;
+      files.unshift({name:'abrir-meu-texto.html',bytes:enc.encode(html)});
+      const zip=zipFiles(files);downloadBlob(zip,`${safeName(note.title||'meu-texto')}.zip`);
+      notify('Texto e arquivos baixados! Extraia o ZIP e abra “abrir-meu-texto.html”.');
+    }catch(e){notify('Não foi possível baixar: '+e.message)}finally{btn.disabled=false;btn.textContent=before}
+  };
   $('presentationBtn').onclick=async()=>{await flushSave();$('presentationTitle').textContent=$('noteTitle').value.trim()||'Sem título';$('presentationBody').innerHTML=sanitize($('editor').innerHTML);$('presentationOverlay').classList.remove('hidden')};
   $('closePresentationBtn').onclick=()=>$('presentationOverlay').classList.add('hidden');
 

@@ -73,7 +73,7 @@
 
   <div id="editorOverlay" class="editor-overlay hidden" role="dialog" aria-modal="true" aria-label="Editor de textos">
     <div class="editor-shell">
-      <div class="editor-top"><button id="editorBackBtn" class="btn-quiet">← Voltar</button><div id="editorSaveState" class="save-state">Salvo</div><div class="editor-top-right"><button id="presentationBtn" class="btn-outline btn-small">▷ Apresentar</button><button id="deleteNoteBtn" class="btn-danger-quiet">Excluir</button></div></div>
+      <div class="editor-top"><button id="editorBackBtn" class="btn-quiet">← Voltar</button><div id="editorSaveState" class="save-state">Salvo</div><div class="editor-top-right"><button id="exportNoteBtn" class="btn-outline btn-small" title="Salvar este texto e as mídias em um ZIP no computador">⬇ Baixar texto + arquivos</button><button id="presentationBtn" class="btn-outline btn-small">▷ Apresentar</button><button id="deleteNoteBtn" class="btn-danger-quiet">Excluir</button></div></div>
       <div class="editor-info"><input id="noteTitle" class="note-title-input" placeholder="Título da anotação..." maxlength="160" /><div class="note-meta"><span>Na pasta</span><select id="noteFolder"></select><span id="lastEdited"></span></div></div>
       <div class="toolbar" id="toolbar">
         <select id="blockStyle" aria-label="Estilo do texto"><option value="P">Texto normal</option><option value="H1">Título grande</option><option value="H2">Título médio</option><option value="H3">Subtítulo</option><option value="BLOCKQUOTE">Citação</option></select>
@@ -83,17 +83,17 @@
         <button data-cmd="insertUnorderedList" title="Lista">☷</button><button data-cmd="insertOrderedList" title="Lista numerada">1.</button>
         <button data-cmd="justifyLeft" title="Alinhar à esquerda">≡</button><button data-cmd="justifyCenter" title="Centralizar">☰</button><button data-cmd="justifyRight" title="Alinhar à direita">≡</button>
         <div class="tool-divider"></div>
-        <button id="insertLinkBtn" title="Inserir link">🔗</button><button id="insertPhotoBtn" title="Inserir foto">▧ Foto</button><button id="insertVideoBtn" title="Inserir vídeo">▶ Vídeo</button><button id="insertTableBtn" title="Inserir tabela">▦ Tabela</button><button id="insertLineBtn" title="Linha divisória">—</button>
+        <button id="insertLinkBtn" title="Inserir link">🔗</button><button id="insertPhotoBtn" title="Escolher fotos dos arquivos deste aparelho">📷 Foto do computador</button><button id="insertVideoBtn" title="Escolher vídeo dos arquivos deste aparelho">🎬 Vídeo do computador</button><button id="insertVideoLinkBtn" title="Adicionar vídeo por endereço (opcional)">🔗 Vídeo por link</button><button id="insertTableBtn" title="Inserir tabela">▦ Tabela</button><button id="insertLineBtn" title="Linha divisória">—</button>
         <button data-cmd="undo" title="Desfazer">↶</button><button data-cmd="redo" title="Refazer">↷</button>
       </div>
-      <div id="mediaToolbar" class="media-toolbar hidden"><span>Mídia selecionada</span><button data-align="left">Esquerda</button><button data-align="center">Centro</button><button data-align="right">Direita</button><label>Largura <input id="mediaWidth" type="range" min="30" max="100" value="80" /></label><button id="mediaUpBtn">↑</button><button id="mediaDownBtn">↓</button><button id="mediaRemoveBtn">✕ Remover</button></div>
-      <div class="paper-wrap"><article id="editor" class="paper" contenteditable="true" spellcheck="true" data-placeholder="Comece a escrever seu estudo aqui...\n\nSelecione um título e insira fotos, vídeos ou tabelas onde quiser."></article></div>
+      <div id="mediaToolbar" class="media-toolbar hidden"><span>Mídia selecionada</span><button data-align="left">Esquerda</button><button data-align="center">Centro</button><button data-align="right">Direita</button><label>Largura <input id="mediaWidth" type="range" min="30" max="100" value="80" /></label><button id="mediaUpBtn">↑</button><button id="mediaDownBtn">↓</button><button id="mediaDownloadBtn">⬇ Baixar foto/vídeo</button><button id="mediaRemoveBtn">✕ Remover</button></div>
+      <div class="paper-wrap"><article id="editor" class="paper" contenteditable="true" spellcheck="true" data-placeholder="Comece a escrever seu estudo aqui...\n\nUse Foto do computador ou Vídeo do computador para escolher seus arquivos."></article></div>
       <div class="editor-footer"><span id="wordCount">0 palavras</span><span>Salvamento automático ✓</span></div>
     </div>
   </div>
   <div id="presentationOverlay" class="presentation-overlay hidden" role="dialog" aria-modal="true" aria-label="Modo apresentação"><div class="presentation-head"><span>✦ Meu Espaço Pessoal · Apresentação</span><button id="closePresentationBtn">✕ Fechar</button></div><div class="presentation-page"><h1 id="presentationTitle"></h1><div id="presentationBody"></div></div></div>
   <div id="modalBackdrop" class="modal-backdrop hidden" role="presentation"><div class="modal" role="dialog" aria-modal="true"><h3 id="modalTitle">Nova pasta</h3><p id="modalHint"></p><input id="modalInput" type="text" /><div class="modal-buttons"><button id="modalCancel" class="btn-outline">Cancelar</button><button id="modalConfirm" class="btn-primary">Salvar</button></div></div></div>
-  <input id="mediaFileInput" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" hidden />
+  <input id="mediaFileInput" type="file" accept="image/*" hidden />
   <div id="toast" class="toast hidden" role="status"></div>
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
