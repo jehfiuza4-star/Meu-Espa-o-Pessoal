@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f6e8ef" />
+  <meta name="description" content="Seu espaço pessoal para estudos, projetos, textos, fotos, vídeos e ideias." />
+  <title>Meu Espaço Pessoal</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <section id="authScreen" class="auth-screen">
+    <div class="auth-shape auth-shape-a"></div><div class="auth-shape auth-shape-b"></div>
+    <div class="auth-card">
+      <div class="auth-symbol">✦</div>
+      <p class="eyebrow">SEU ESPAÇO DE CONHECIMENTO</p>
+      <h1>Meu <i>Espaço Pessoal</i></h1>
+      <p class="auth-desc">Organize assuntos, escreva como no Word e guarde fotos, vídeos e descobertas em um só lugar.</p>
+      <div id="authFeedback" class="feedback hidden" role="status"></div>
+      <div id="cloudAuth">
+        <label for="emailInput">E-mail</label>
+        <input id="emailInput" type="email" autocomplete="email" placeholder="seuemail@exemplo.com" />
+        <label for="passwordInput">Senha</label>
+        <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Pelo menos 6 caracteres" />
+        <button id="loginBtn" class="btn-primary btn-block">Entrar no meu espaço</button>
+        <button id="signupBtn" class="btn-text btn-block">Ainda não tenho conta · Criar conta</button>
+        <p class="auth-help" id="authHelp">Para usar login e sincronizar, configure o Supabase seguindo o guia incluído.</p>
+      </div>
+      <div class="auth-separator"><span>ou</span></div>
+      <button id="demoBtn" class="btn-outline btn-block">Experimentar no meu aparelho</button>
+      <p class="local-warning">O modo de experiência salva apenas neste navegador. Não possui senha nem sincronização.</p>
+    </div>
+  </section>
+
+  <div id="app" class="app hidden">
+    <div class="app-topbar">
+      <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+      <div class="brand"><span class="brand-star">✦</span> Meu <em>Espaço Pessoal</em></div>
+      <div class="top-actions"><span id="modeBadge" class="mode-badge"></span><span id="saveState" class="save-state">Salvo</span><button id="logoutBtn" class="btn-quiet" title="Sair">Sair</button></div>
+    </div>
+    <div class="app-grid">
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-heading"><span>MEUS ESPAÇOS</span><button id="newFolderBtn" class="small-plus" title="Nova pasta">＋</button></div>
+        <button id="homeBtn" class="nav-item active"><span class="nav-emoji">🏡</span> Visão geral</button>
+        <button id="allNotesBtn" class="nav-item"><span class="nav-emoji">📚</span> Todos os textos</button>
+        <div class="sidebar-divider"></div>
+        <div id="folderList" class="folder-list"></div>
+        <div class="sidebar-bottom">
+          <button id="backupBtn" class="sidebar-link">↧ Exportar cópia</button>
+          <label class="sidebar-link import-label">↥ Importar cópia<input id="importFile" type="file" accept="application/json,.json" hidden /></label>
+          <p id="storageText" class="storage-note">Seu espaço para aprender.</p>
+        </div>
+      </aside>
+      <main class="main-content">
+        <header class="main-header">
+          <div><p id="pageEyebrow" class="eyebrow">BEM-VINDA AO SEU ESPAÇO</p><h2 id="pageTitle">Onde as ideias florescem ✨</h2><p id="pageSubtitle" class="subtitle">Um cantinho especial para tudo que você aprende.</p></div>
+          <button id="createNoteBtn" class="btn-primary">＋ Novo texto</button>
+        </header>
+        <section class="search-panel">
+          <div class="search-input-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Pesquisar fonemas, pronomes, palavras..." autocomplete="off" /></div>
+          <label for="searchType">Pesquisar por</label>
+          <select id="searchType"><option value="all">Título e conteúdo</option><option value="title">Só título</option><option value="content">Só conteúdo</option></select>
+        </section>
+        <section id="welcomePanel" class="welcome-panel"><div><span class="welcome-small">UM LUGAR SÓ SEU</span><h3>Uma ideia hoje, um mundo de descobertas amanhã.</h3><p>Crie pastas para cada matéria e registre tudo do seu jeito.</p></div><div class="welcome-illustration">✍🏻<span>✦</span></div></section>
+        <div class="section-heading"><h3 id="listHeading">Suas pastas</h3><button id="newFolderInlineBtn" class="btn-text">＋ Criar pasta</button></div>
+        <section id="folderCards" class="folder-cards"></section>
+        <div class="section-heading note-heading"><h3 id="notesHeading">Anotações recentes</h3><span id="resultCount" class="result-count"></span></div>
+        <section id="notesGrid" class="notes-grid"></section>
+        <div id="emptyState" class="empty-state hidden"><div>📝</div><h3>Nenhuma anotação por aqui</h3><p>Crie seu primeiro texto ou tente pesquisar outra palavra.</p></div>
+      </main>
+    </div>
+  </div>
+
+  <div id="editorOverlay" class="editor-overlay hidden" role="dialog" aria-modal="true" aria-label="Editor de textos">
+    <div class="editor-shell">
+      <div class="editor-top"><button id="editorBackBtn" class="btn-quiet">← Voltar</button><div id="editorSaveState" class="save-state">Salvo</div><div class="editor-top-right"><button id="presentationBtn" class="btn-outline btn-small">▷ Apresentar</button><button id="deleteNoteBtn" class="btn-danger-quiet">Excluir</button></div></div>
+      <div class="editor-info"><input id="noteTitle" class="note-title-input" placeholder="Título da anotação..." maxlength="160" /><div class="note-meta"><span>Na pasta</span><select id="noteFolder"></select><span id="lastEdited"></span></div></div>
+      <div class="toolbar" id="toolbar">
+        <select id="blockStyle" aria-label="Estilo do texto"><option value="P">Texto normal</option><option value="H1">Título grande</option><option value="H2">Título médio</option><option value="H3">Subtítulo</option><option value="BLOCKQUOTE">Citação</option></select>
+        <div class="tool-divider"></div>
+        <button data-cmd="bold" title="Negrito"><b>B</b></button><button data-cmd="italic" title="Itálico"><i>I</i></button><button data-cmd="underline" title="Sublinhado"><u>U</u></button><button data-cmd="strikeThrough" title="Riscado"><s>S</s></button>
+        <div class="tool-divider"></div>
+        <button data-cmd="insertUnorderedList" title="Lista">☷</button><button data-cmd="insertOrderedList" title="Lista numerada">1.</button>
+        <button data-cmd="justifyLeft" title="Alinhar à esquerda">≡</button><button data-cmd="justifyCenter" title="Centralizar">☰</button><button data-cmd="justifyRight" title="Alinhar à direita">≡</button>
+        <div class="tool-divider"></div>
+        <button id="insertLinkBtn" title="Inserir link">🔗</button><button id="insertPhotoBtn" title="Inserir foto">▧ Foto</button><button id="insertVideoBtn" title="Inserir vídeo">▶ Vídeo</button><button id="insertTableBtn" title="Inserir tabela">▦ Tabela</button><button id="insertLineBtn" title="Linha divisória">—</button>
+        <button data-cmd="undo" title="Desfazer">↶</button><button data-cmd="redo" title="Refazer">↷</button>
+      </div>
+      <div id="mediaToolbar" class="media-toolbar hidden"><span>Mídia selecionada</span><button data-align="left">Esquerda</button><button data-align="center">Centro</button><button data-align="right">Direita</button><label>Largura <input id="mediaWidth" type="range" min="30" max="100" value="80" /></label><button id="mediaUpBtn">↑</button><button id="mediaDownBtn">↓</button><button id="mediaRemoveBtn">✕ Remover</button></div>
+      <div class="paper-wrap"><article id="editor" class="paper" contenteditable="true" spellcheck="true" data-placeholder="Comece a escrever seu estudo aqui...\n\nSelecione um título e insira fotos, vídeos ou tabelas onde quiser."></article></div>
+      <div class="editor-footer"><span id="wordCount">0 palavras</span><span>Salvamento automático ✓</span></div>
+    </div>
+  </div>
+  <div id="presentationOverlay" class="presentation-overlay hidden" role="dialog" aria-modal="true" aria-label="Modo apresentação"><div class="presentation-head"><span>✦ Meu Espaço Pessoal · Apresentação</span><button id="closePresentationBtn">✕ Fechar</button></div><div class="presentation-page"><h1 id="presentationTitle"></h1><div id="presentationBody"></div></div></div>
+  <div id="modalBackdrop" class="modal-backdrop hidden" role="presentation"><div class="modal" role="dialog" aria-modal="true"><h3 id="modalTitle">Nova pasta</h3><p id="modalHint"></p><input id="modalInput" type="text" /><div class="modal-buttons"><button id="modalCancel" class="btn-outline">Cancelar</button><button id="modalConfirm" class="btn-primary">Salvar</button></div></div></div>
+  <input id="mediaFileInput" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" hidden />
+  <div id="toast" class="toast hidden" role="status"></div>
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
